@@ -27,7 +27,7 @@ jobs:
 
       - name: Run scraper
         run: |
-          python scripts/auto.py
+          python auto_scrape.py
 
       - name: Configure git
         run: |
