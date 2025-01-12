@@ -36,7 +36,6 @@ Pygments
 PySocks
 python-dateutil
 pytz
-pywin32
 pyzmq
 requests
 six
