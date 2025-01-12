@@ -1,0 +1,49 @@
+name: Daily Scraper (UTC-3 at 23:00, Mon-Fri)
+
+on:
+  schedule:
+    # 02:00 UTC, Tuesday through Saturday
+    # which corresponds to 23:00 UTC-3, Monday through Friday
+    - cron: '0 2 * * 2-6'
+  workflow_dispatch:
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+        with:
+          ref: prod-scraping
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run scraper
+        run: |
+          python scripts/auto.py
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Commit changes
+        run: |
+          # Stage any changed files
+          git add .
+          # Only commit if there are changes
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Daily scrape update"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          branch: auto-scraping
+          github_token: ${{ secrets.GITHUB_TOKEN }}
