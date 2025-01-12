@@ -17,7 +17,7 @@ jedi
 jupyter_client
 jupyter_core
 matplotlib-inline
-mkl-service==2.4.0
+mkl-service
 mkl_fft
 mkl_random
 nest_asyncio
@@ -36,7 +36,7 @@ Pygments
 PySocks
 python-dateutil
 pytz
-pywin32==307
+pywin32
 pyzmq
 requests
 six
