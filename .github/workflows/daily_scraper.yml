@@ -30,11 +30,6 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-      - name: Merge from prod-scraping
-        run: |
-          git fetch origin prod-scraping
-          git merge origin/prod-scraping --no-ff
-
       - name: Run scraper
         run: |
           python auto_scrape.py
