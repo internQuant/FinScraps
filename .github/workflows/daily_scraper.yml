@@ -7,17 +7,22 @@ on:
     - cron: '0 2 * * 2-6'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: auto-scraping
+          fetch-depth: 0               # full history to avoid unrelated-histories
+          persist-credentials: true     # keep token so we can push
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
@@ -27,27 +32,33 @@ jobs:
 
       - name: Configure Git Identity
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Merge from prod-scraping
         run: |
-          git fetch origin prod-scraping
-          git merge origin/prod-scraping --no-ff
+          set -euo pipefail
+          git fetch origin prod-scraping --prune
+          # Try a normal merge first; if histories are unrelated, allow it explicitly.
+          if ! git merge --no-ff origin/prod-scraping -m "Merge origin/prod-scraping into auto-scraping"; then
+            echo "Normal merge failed; retrying with --allow-unrelated-histories"
+            git merge --no-ff --allow-unrelated-histories origin/prod-scraping -m "Merge origin/prod-scraping (unrelated histories) into auto-scraping"
+          fi
 
       - name: Run scraper
         run: |
           python auto_scrape.py
 
-      - name: Commit changes
+      - name: Commit changes (if any)
         run: |
-          # Stage any changed files
-          git add .
-          # Only commit if there are changes
-          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Daily scrape update"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily scrape update"
+          fi
 
       - name: Push changes
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          branch: auto-scraping
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # actions/checkout provided credentials; push back to the same branch
+          git push origin HEAD:auto-scraping
