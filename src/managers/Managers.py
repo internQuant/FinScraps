@@ -95,7 +95,7 @@ class AnbimaIRTSManager:
         combined_df.drop_duplicates(inplace=True) 
         combined_df.sort_values("date", inplace=True, ascending=True)
         combined_df.reset_index(drop=True, inplace=True)
-        combined_df.to_feather(feather_path)
+        combined_df.to_feather(feather_path, compression=None)
         self.logger.info(f"Combined dataset saved to {feather_path} with {combined_df.shape[0]} rows.")
 
         return True
